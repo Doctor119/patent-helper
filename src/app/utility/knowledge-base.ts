@@ -1,4 +1,4 @@
-export class FirstOrderDecomp {
+export class KnowledgeBase {
     /*
         Build a knowledge base out of the description, then analyze the metadata about that knowledge base to extract search terms out of it.
         Once search terms have been extracted, use them to query the abstracts of patents.
@@ -17,16 +17,13 @@ export class FirstOrderDecomp {
         Turn nouns into OBJECTS
     */
 
-    private domain: string;
-    private atoms: string[];
-    private relationships: Array<string>;
+   domain: string;
+   atoms: Array<string>;
+   relationships: Array<string>;
 
-    constructor(description: string) {
-        this.domain = description;
-        this.createKnowledgeBase();
-    }
-
-    private createKnowledgeBase() {
-        /* TO DO - Figure out how to build the knowledge base. */
-    }
+   constructor(domain: string) {
+    this.domain = domain;
+    this.atoms = new Array<string>();
+    this.relationships = new Array<string>();
+   }
 }

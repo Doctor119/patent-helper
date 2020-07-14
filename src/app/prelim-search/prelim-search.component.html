@@ -29,14 +29,20 @@
     </p>
     <form>
         <div class="form-group" id="inventionDescriptionInput">
-            <textarea class="form-control col-sm-6" rows="5" placeholder="Enter your description here. Your description is used for the search process but is not stored anywhere."></textarea>
+            <textarea class="form-control col-sm-6" rows="5" (input)="description = $event.target.value" placeholder="Enter your description here. Your description is used for the search process but is not stored anywhere."></textarea>
         </div>
         <div class="form-group" id="cpcInput">
-            <input class="form-control col-sm-2" type="text" placeholder="CPC" maxlength="10">
+            <input class="form-control col-sm-2" type="text" placeholder="CPC" maxlength="10" (input)="cpc = $event.target.value">
         </div>
         <div class="form-group" id="prelim-search-submit-button">
-            <button type="button" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn btn-primary" (click)="onClickSubmit()">Submit</button>
         </div>
     </form>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Decomposed message</h3>
+            <p class="card-text">No results yet.</p>
+        </div>
+    </div>
     
 </div>
