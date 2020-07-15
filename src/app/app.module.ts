@@ -11,30 +11,7 @@ import { CpcComponent } from './cpc/cpc.component';
 import { PrelimSearchComponent } from './prelim-search/prelim-search.component';
 
 import { ConfigService } from './utility/config.service';
-import { of, Observable, ObservableInput } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-
-function loadAPIKey(http: HttpClient, config: ConfigService): (() => Promise<boolean>) {
-  return (): Promise<boolean> => {
-    return new Promise<boolean>((resolve: (a: boolean) => void): void => {
-      http.get('./rapidapikey.json')
-        .pipe(
-          map((x: ConfigService) => {
-            config.rapidApiKey = x.rapidApiKey;
-            resolve(true);
-          }),
-          catchError((x: {status: number}, caught: Observable<void>): ObservableInput<{}> => {
-            if (x.status !== 404) {
-              resolve(false);
-            }
-            config.rapidApiKey = "unknown";
-            resolve(true);
-            return of({});
-          })
-        ).subscribe();
-    });
-  };
-}
+import { loadAPIKey } from './utility/api-key-loader';
 
 @NgModule({
   declarations: [
@@ -48,8 +25,7 @@ function loadAPIKey(http: HttpClient, config: ConfigService): (() => Promise<boo
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule,
-    HttpClient
+    HttpClientModule
   ],
   providers: [
     {

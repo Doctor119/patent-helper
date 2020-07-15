@@ -2,24 +2,22 @@ import { Injectable, resolveForwardRef } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { VirtualTimeScheduler, Observable } from 'rxjs';
 import { KnowledgeBase, FirstOrderAtom, FirstOrderRelation } from './knowledge-base';
+import { ConfigService } from './config.service'; 
 
 @Injectable({
   providedIn: 'root'
 })
 export class WordService {
   private readonly wordAPIRootUrl: string;
-  private rapidAPIKey: string;
   private readonly headers: HttpHeaders;
   private knowledgeBase: KnowledgeBase;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private config: ConfigService) {
     this.wordAPIRootUrl = "https://wordsapiv1.p.rapidapi.com/words/";
-
-    this.rapidAPIKey = "7331809e54msh4d7a1172493cf9ep1e1e1ejsne49e84f8814e";
 
     this.headers = new HttpHeaders()
     .set("x-rapidapi-host", "wordsapiv1.p.rapidapi.com")
-    .set("x-rapidapi-key", this.rapidAPIKey);
+    .set("x-rapidapi-key", config.rapidApiKey);
   }
 
   private getWordTypes(word: string) : string[] {
@@ -45,7 +43,7 @@ export class WordService {
   createKnowledgeBase(domain: string) {
     /* Get each atom */
     //Strip out the articles and common terms
-    let strippedString = this.knowledgeBase.domain.toLowerCase().replace(/[,]/g, '');
+    let strippedString = domain.toLowerCase().replace(/[,]/g, '');
     let strippedDomain: Array<string> = strippedString.split(' ');
     //Go get the parts of speech of each word (while minimizing the number of calls to WordsAPI)
     let domainSet: Set<string> = new Set<string>();

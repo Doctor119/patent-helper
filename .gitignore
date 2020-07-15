@@ -40,7 +40,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
-rapidapikey.json
+/src/assets/rapidapikey.json
 
 # System Files
 .DS_Store
