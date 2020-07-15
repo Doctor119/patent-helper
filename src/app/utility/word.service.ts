@@ -29,7 +29,8 @@ export class WordService {
       }
     })
     .catch(error => {
-      returnArray.push('nodefinition');
+      //By default, categorize anything that isn't defined as a noun
+      returnArray.push('noun');
     });
     return returnArray;
   }
@@ -38,8 +39,7 @@ export class WordService {
     this.knowledgeBase = new KnowledgeBase(domain);
     /* Get each atom */
     //Strip out the articles and common terms
-    let strippedString = this.knowledgeBase.domain.toLowerCase().replace(/[.,]/g, '');
-    strippedString = strippedString.replace('present invention', '').replace('  ', ' ');
+    let strippedString = this.knowledgeBase.domain.toLowerCase().replace(/[,]/g, '');
     let strippedDomain: Array<string> = strippedString.split(' ');
     //Go get the parts of speech of each word (while minimizing the number of calls to WordsAPI)
     let domainSet: Set<string> = new Set<string>();
@@ -50,7 +50,27 @@ export class WordService {
     domainSet.forEach(word => {
       identifiedPartsOfSpeech.set(word, this.getWordTypes(word));
     });
+    //Define words by their 'first' part of speech, giving preference to any prepositions you find
     //Find relationships by using the prepositions
-    //Find atoms by using 'the', 'a', and 'an'
+      //Find all prepositions
+      //for each preposition
+      //  work your way backward until you get to a verb, preposition, or an article
+      //    If a verb is found, from the verb to the preposition is the RELATION
+      //    work your way backward from the verb until you get to an article (a, an, the). From the word after the article until the verb is an ATOM.
+      //    If an article is found instead, just the preposition is the RELATION, and everything preceding it back to the article is an ATOM.
+      //    If you hit a preposition, you've run up against overlapping relations. The original preposition is the RELATION, and everything preceding it back to the other preposition is an ATOM
+      //  work your way forward from the preposition until you get to a period or a conjugation of the verb "to be" (is, are)
+      //  When you find one of these, everything from the preposition to the ending point (period or is/are) is the second ATOM.
+      //  At this point, you have a RELATION, a left ATOM, and a right ATOM. Use these to catalog the relation.
+  }
+
+  getTopPrioritySearchTerms(): string[] {
+    //Once all relations and atoms are catalogued, rank them by how commonly they occur, and use that to form a list of priorities for the search.
+      //  1) Multiples of relations and atoms
+      //  2) Multiples of relations
+      //  3) Multiples of atoms
+      //  4) relations/atoms that have the longest length
+      //  5) relations/atoms that include the words "invention" or "present invention" are lowest priority
+      return [];
   }
 }
