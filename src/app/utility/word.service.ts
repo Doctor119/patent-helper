@@ -1,19 +1,26 @@
 import { Injectable, resolveForwardRef } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { VirtualTimeScheduler, Observable } from 'rxjs';
-import { KnowledgeBase } from './knowledge-base';
+import { KnowledgeBase, FirstOrderAtom, FirstOrderRelation } from './knowledge-base';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WordService {
-  private readonly wordAPIRootUrl: string = "https://wordsapiv1.p.rapidapi.com/words/";
-  private readonly headers: HttpHeaders = new HttpHeaders()
-    .set("x-rapidapi-host", "wordsapiv1.p.rapidapi.com")
-    .set("x-rapidapi-key", "7331809e54msh4d7a1172493cf9ep1e1e1ejsne49e84f8814e");
-  knowledgeBase: KnowledgeBase;
+  private readonly wordAPIRootUrl: string;
+  private rapidAPIKey: string;
+  private readonly headers: HttpHeaders;
+  private knowledgeBase: KnowledgeBase;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {
+    this.wordAPIRootUrl = "https://wordsapiv1.p.rapidapi.com/words/";
+
+    this.rapidAPIKey = "7331809e54msh4d7a1172493cf9ep1e1e1ejsne49e84f8814e";
+
+    this.headers = new HttpHeaders()
+    .set("x-rapidapi-host", "wordsapiv1.p.rapidapi.com")
+    .set("x-rapidapi-key", this.rapidAPIKey);
+  }
 
   private getWordTypes(word: string) : string[] {
     let returnArray : string[] = [];
@@ -29,14 +36,13 @@ export class WordService {
       }
     })
     .catch(error => {
-      //By default, categorize anything that isn't defined as a noun
+      //By default, categorize anything with no definition as a noun
       returnArray.push('noun');
     });
     return returnArray;
   }
 
   createKnowledgeBase(domain: string) {
-    this.knowledgeBase = new KnowledgeBase(domain);
     /* Get each atom */
     //Strip out the articles and common terms
     let strippedString = this.knowledgeBase.domain.toLowerCase().replace(/[,]/g, '');
@@ -50,18 +56,8 @@ export class WordService {
     domainSet.forEach(word => {
       identifiedPartsOfSpeech.set(word, this.getWordTypes(word));
     });
-    //Define words by their 'first' part of speech, giving preference to any prepositions you find
-    //Find relationships by using the prepositions
-      //Find all prepositions
-      //for each preposition
-      //  work your way backward until you get to a verb, preposition, or an article
-      //    If a verb is found, from the verb to the preposition is the RELATION
-      //    work your way backward from the verb until you get to an article (a, an, the). From the word after the article until the verb is an ATOM.
-      //    If an article is found instead, just the preposition is the RELATION, and everything preceding it back to the article is an ATOM.
-      //    If you hit a preposition, you've run up against overlapping relations. The original preposition is the RELATION, and everything preceding it back to the other preposition is an ATOM
-      //  work your way forward from the preposition until you get to a period or a conjugation of the verb "to be" (is, are)
-      //  When you find one of these, everything from the preposition to the ending point (period or is/are) is the second ATOM.
-      //  At this point, you have a RELATION, a left ATOM, and a right ATOM. Use these to catalog the relation.
+    //Construct the knowledge base
+    this.knowledgeBase = new KnowledgeBase(domain, identifiedPartsOfSpeech);
   }
 
   getTopPrioritySearchTerms(): string[] {
