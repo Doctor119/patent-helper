@@ -1,32 +1,42 @@
 <div class="container pt-2">
-    <h2>Perform a Preliminary Search of the Patent Database</h2>
-    <p>
-        On this page you can perform a preliminary search of the patent database,
-        allowing you to get a better idea of how novel your invention is.
-    </p>
-    <h3>What is a preliminary search?</h3>
-    <p>
-        A preliminary search is one to simply get started on your journey to obtaining a patent.
-        Obtaining a patent is a process that takes many hours of research, several drafts of a 
-        patent application, and possibly many years in the patent prosecution process. Before you
-        get started on such a heavy commitment, we recommend you do a preliminary search of the
-        patent database to get a quick idea of how novel your invention is.
-    </p>
-    <p>
-        If at the end of this preliminary search you feel hopeful about obtaining a patent for your
-        invention, you should consider calling the experts at Lawyer, Lawyer and Associates to begin
-        this exciting and prestigious process.
-    </p>
-    <h3>Get started</h3>
-    <p>
-        Enter a description of your invention in the text box below. The search algorithm needs
-        1 to 3 sentences of description to identify any patents which may be similar
-        to your own.
-    </p>
-    <p>
-        For best results, enter the CPC code you found on the <a class="badge badge-light" routerLink="/cpc" routerLinkActive="active">Find Your CPC</a>
-        page.
-    </p>
+    <div class="collapse show multi-collapse" id="instructions">
+        <h2>Perform a Preliminary Search of the Patent Database</h2>
+        <p>
+            On this page you can perform a preliminary search of the patent database,
+            allowing you to get a better idea of how novel your invention is.
+        </p>
+        <h3>What is a preliminary search?</h3>
+        <p>
+            A preliminary search is one to simply get started on your journey to obtaining a patent.
+            Obtaining a patent is a process that takes many hours of research, several drafts of a 
+            patent application, and possibly many years in the patent prosecution process. Before you
+            get started on such a heavy commitment, we recommend you do a preliminary search of the
+            patent database to get a quick idea of how novel your invention is.
+        </p>
+        <p>
+            If at the end of this preliminary search you feel hopeful about obtaining a patent for your
+            invention, you should consider calling the experts at Lawyer, Lawyer and Associates to begin
+            this exciting and prestigious process.
+        </p>
+        <h3>Get started</h3>
+        <p>
+            Enter a description of your invention in the text box below. The search algorithm needs
+            1 to 3 sentences of description to identify any patents which may be similar
+            to your own.
+        </p>
+        <p>
+            For best results, enter the CPC code you found on the <a class="badge badge-light" routerLink="/cpc" routerLinkActive="active">Find Your CPC</a>
+            page.
+        </p>
+    </div>
+
+    <div class="col-md-12">
+        <div class="spinner-border text-danger my-3" role="status" [hidden]="!wordSearchInProgress">
+            <span class="sr-only">Searching...</span>
+        </div>
+        <p>{{inProgressMessage}}</p>
+    </div>
+    
     <form>
         <div class="form-group" id="inventionDescriptionInput">
             <textarea class="form-control col-sm-6" rows="5" (input)="description = $event.target.value" placeholder="Enter your description here. Your description is used for the search process but is not stored anywhere."></textarea>
@@ -35,14 +45,15 @@
             <input class="form-control col-sm-2" type="text" placeholder="CPC" maxlength="10" (input)="cpc = $event.target.value">
         </div>
         <div class="form-group" id="prelim-search-submit-button">
-            <button type="button" class="btn btn-primary" (click)="onClickSubmit()">Submit</button>
+            <button type="button" class="btn btn-primary" (click)="onClickSubmit()" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="true" aria-controls="instructions">Submit</button>
         </div>
     </form>
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Decomposed message</h3>
-            <p class="card-text">No results yet.</p>
+    <div class="collapse multi-collapse">
+        <div class="card" *ngFor="let searchResultKey of searchResultsKeys">
+            <div class="card-body">
+                <h3 class="card-title">{{searchResultKey}}</h3>
+                <p class="card-text">{{searchResults.get(searchResultKey)}}</p>
+            </div>
         </div>
     </div>
-    
 </div>
