@@ -25,28 +25,30 @@ export class WordService {
    */
   public async getSearchResults(description: string) : Promise<Map<string, string>>{
     //First, use a dictionary API to retrieve the types of speech of each word (noun, verb, preposition, etc.)
-    //let wordsOfSpeechMap: Map<string, string[]> = await this.getPartsOfSpeechMap(description);
+    let wordsOfSpeechMap: Map<string, string[]> = await this.getPartsOfSpeechMap(description);
 
     //Using these retrieved types of speech, create a knowledge base out of them.
     //This KnowledgeBase object intelligently constructs atoms and relations.
-    //let knowledgeBase = new KnowledgeBase(description, await wordsOfSpeechMap);
+    let knowledgeBase = new KnowledgeBase(description, await wordsOfSpeechMap);
 
     //Using the knowledge base, create a list of priority search terms
-    //let priorityTerms: string[] = this.getPrioritySearchTerms(knowledgeBase);
+    let priorityTerms: string[] = this.getPrioritySearchTerms(knowledgeBase);
 
     //Go scrape the USPTO databases using the search terms
-    let scrapeResults: Map<string, string> = await this.scrapeUSPTO(['terms']);
+    let foundPatents: Map<string, string> = new Map();
+    for (let term of priorityTerms) {
+      let scrapeResults: Map<string, string> = await this.scrapeUSPTO(term);
+      for (let kvpair of scrapeResults.entries()) {
+        if (foundPatents.size > 9) break;
+        foundPatents.set(kvpair[0], kvpair[1]);
+      }
+      if (foundPatents.size > 9) break;
+    }
 
     //Return the results of the search
     return await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        let returnMap: Map<string, string> = new Map();
-        returnMap.set('1234567890', 'This is a sample invention abstract.');
-        returnMap.set('0987654321', 'This is a second invention abstract');
-        returnMap.set('123579111317', 'This is a third patent abstract');
-        resolve(returnMap);
-        console.log('results generated');
-      }, 2000);
+      resolve(foundPatents);
+      console.log('results generated');
     });
   }
 
@@ -62,6 +64,7 @@ export class WordService {
     });
   }
 
+  /** Uses a knowledge base to select the search terms that will bring back the best results from the USPTO */
   private getPrioritySearchTerms(kb: KnowledgeBase): string[] {
     //Get all the relations + atoms, relations, atoms, and individual words, all set as strings
     let relationsPlusAtoms: Map<string, number> = new Map();
@@ -126,6 +129,11 @@ export class WordService {
         }
       }
     }
+
+    console.log('FIRST ORDER DECOMPOSITIONS ARE LISTED BELOW');
+    console.log(relationsPlusAtoms);
+    console.log(relations);
+    console.log(atoms);
     
     let returnArray: string[] = [];
     //Use the following priorities
@@ -155,16 +163,59 @@ export class WordService {
       if (returnArray.length > 5) return returnArray;
       returnArray.push(relatoms);
     }
+    //  5) Relations that have the longest length
+    let sortedRelations: Array<string> = Array.from(relations.keys());
+    sortedRelations = sortedRelations.sort();
+    sortedRelations = sortedRelations.reverse();
+    for (let rel of sortedRelations) {
+      if (returnArray.length > 5) return returnArray;
+      returnArray.push(rel);
+    }
+    //  6) Atoms that have the longest length
+    let sortedAtoms: Array<string> = Array.from(atoms.keys());
+    sortedAtoms = sortedAtoms.sort();
+    sortedAtoms = sortedAtoms.reverse();
+    for (let atom of sortedAtoms) {
+      if (returnArray.length > 5) return returnArray;
+      returnArray.push(atom);
+    }
 
     return returnArray;
   }
 
-  private async scrapeUSPTO(searchTerms: string[], cpc?: string): Promise<Map<string, string>> {
-    return new Promise<Map<string, string>>((resolve) => {
-      resolve(new Map<string, string>());
+  /** Retrieves patent data from the USPTO based on some search terms */
+  private async scrapeUSPTO(searchTerm: string, cpc?: string): Promise<Map<string, string>> {
+    let returnMap: Map<string, string> = new Map();
+    let baseURL: string = 'https://www.patentsview.org/api/patents/query?';
+    let queryParameters: string;
+    let fields: string = '&f=["patent_number","patent_abstract"]';
+    //Construct query parameters based on the search terms
+    if (cpc) {
+      //TODO
+    }
+    else {
+      queryParameters = 'q={"_text_all":{"patent_abstract":"' + searchTerm + '"}}';
+    }
+
+    //Query the USPTO
+    return await this.http.get(baseURL + queryParameters + fields)
+    .toPromise().then(data => {
+      if (data['count'] == 0) {
+        console.log('No results found for: ' + searchTerm);
+        return returnMap;
+      }
+      else {
+        for (let i = 0; i < data['count']; i++) {
+          console.log('Results found for: ' + searchTerm);
+          returnMap.set(data['patents'][i]['patent_number'], data['patents'][i]['patent_abstract']);
+        }
+        return returnMap;
+      }
     });
+    
   }
 
+  /** Gets the parts of speech of a word, as in, whether it is a noun, verb, etc. */
   private async getWordTypes(word: string): Promise<string[]> {
     let returnArray: string[] = [];
     let resultSet: Set<string> = new Set();
