@@ -15,7 +15,7 @@ export class PrelimSearchComponent implements OnInit {
   description: string;
   cpc: string;
 
-  constructor(private wordService: WordService, private cdRef: ChangeDetectorRef) { }
+  constructor(private wordService: WordService) { }
 
   ngOnInit(): void { }
 

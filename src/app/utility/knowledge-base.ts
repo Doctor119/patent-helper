@@ -110,9 +110,9 @@ export class FirstOrderRelation {
 
     toString(): string {
         if (typeof this.leftAtom === 'undefined')
-            return this.relation + ' (' + this.rightAtom.fullAtom + ')';
+            return this.relation + ' ' + this.rightAtom.fullAtom;
         else 
-            return '(' + this.leftAtom.fullAtom + ') ' + this.relation + ' (' + this.rightAtom.fullAtom + ')';
+            return this.leftAtom.fullAtom + ' ' + this.relation + ' ' + this.rightAtom.fullAtom;
     }
 }
 

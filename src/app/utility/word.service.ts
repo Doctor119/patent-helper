@@ -25,17 +25,17 @@ export class WordService {
    */
   public async getSearchResults(description: string) : Promise<Map<string, string>>{
     //First, use a dictionary API to retrieve the types of speech of each word (noun, verb, preposition, etc.)
-    let wordsOfSpeechMap: Map<string, string[]> = await this.getPartsOfSpeechMap(description);
+    //let wordsOfSpeechMap: Map<string, string[]> = await this.getPartsOfSpeechMap(description);
 
     //Using these retrieved types of speech, create a knowledge base out of them.
     //This KnowledgeBase object intelligently constructs atoms and relations.
-    let knowledgeBase = new KnowledgeBase(description, await wordsOfSpeechMap);
+    //let knowledgeBase = new KnowledgeBase(description, await wordsOfSpeechMap);
 
     //Using the knowledge base, create a list of priority search terms
-    let priorityTerms: string[] = this.getPrioritySearchTerms(knowledgeBase);
+    //let priorityTerms: string[] = this.getPrioritySearchTerms(knowledgeBase);
 
     //Go scrape the USPTO databases using the search terms
-    let scrapeResults: Map<string, string> = await this.scrapeUSPTO(priorityTerms);
+    let scrapeResults: Map<string, string> = await this.scrapeUSPTO(['terms']);
 
     //Return the results of the search
     return await new Promise((resolve, reject) => {
@@ -63,13 +63,100 @@ export class WordService {
   }
 
   private getPrioritySearchTerms(kb: KnowledgeBase): string[] {
-    //Once all relations and atoms are catalogued, rank them by how commonly they occur, and use that to form a list of priorities for the search.
-      //  1) Multiples of relations and atoms
-      //  2) Multiples of relations
-      //  3) Multiples of atoms
-      //  4) relations/atoms that have the longest length
-      //  5) relations/atoms that include the words "invention" or "present invention" are lowest priority
-    return [];
+    //Get all the relations + atoms, relations, atoms, and individual words, all set as strings
+    let relationsPlusAtoms: Map<string, number> = new Map();
+    let relations: Map<string, number> = new Map();
+    let atoms: Map<string, number> = new Map();
+    let individualWords: Map<string, number> = new Map();
+    for (let rel of kb.relations) {
+      //Update relations+atoms
+      if (relationsPlusAtoms.has(rel.toString())) {
+        relationsPlusAtoms.set(rel.toString(), relationsPlusAtoms.get(rel.toString()) + 1);
+      }
+      else {
+        relationsPlusAtoms.set(rel.toString(), 1);
+      }
+      //Update relations
+      if (relations.has(rel.relation)) {
+        relations.set(rel.relation, relations.get(rel.relation) + 1);
+      }
+      else {
+        relations.set(rel.relation, 1);
+      }
+      //Update atoms
+      if (typeof rel.leftAtom !== 'undefined') {
+        if (atoms.has(rel.leftAtom.fullAtom)) {
+          atoms.set(rel.leftAtom.fullAtom, atoms.get(rel.leftAtom.fullAtom) + 1);
+        }
+        else {
+          atoms.set(rel.leftAtom.fullAtom, 1);
+        }
+      }
+      if (atoms.has(rel.rightAtom.fullAtom)) {
+        atoms.set(rel.rightAtom.fullAtom, atoms.get(rel.rightAtom.fullAtom) + 1);
+      }
+      else {
+        atoms.set(rel.rightAtom.fullAtom, 1);
+      }
+      //Update individual words
+      if (typeof rel.leftAtom !== 'undefined') {
+        for (let word of rel.leftAtom.getIndividualWords()) {
+          if (individualWords.has(word)) {
+            individualWords.set(word, individualWords.get(word) + 1);
+          }
+          else {
+            individualWords.set(word, 1);
+          }
+        }
+      }
+      for (let word of rel.rightAtom.getIndividualWords()) {
+        if (individualWords.has(word)) {
+          individualWords.set(word, individualWords.get(word) + 1);
+        }
+        else {
+          individualWords.set(word, 1);
+        }
+      }
+      for (let word of rel.getRelationIndividualWords()) {
+        if (individualWords.has(word)) {
+          individualWords.set(word, individualWords.get(word) + 1);
+        }
+        else {
+          individualWords.set(word, 1);
+        }
+      }
+    }
+    
+    let returnArray: string[] = [];
+    //Use the following priorities
+    //  1) Multiples of relations and atoms
+    for (let rel of relationsPlusAtoms.keys()) {
+      if (returnArray.length > 5) return returnArray;
+      if (relationsPlusAtoms.get(rel) > 1)
+        returnArray.push(rel);
+    }
+    //  2) Multiples of relations
+    for (let rel of relations.keys()) {
+      if (returnArray.length > 5) return returnArray;
+      if (relations.get(rel) > 1)
+        returnArray.push(rel);
+    }
+    //  3) Multiples of atoms
+    for (let atom of atoms.keys()) {
+      if (returnArray.length > 5) return returnArray;
+      if (atoms.get(atom) > 1)
+        returnArray.push(atom);
+    }
+    //  4) relations/atoms that have the longest length
+    let sortedRelationsAtoms: Array<string> = Array.from(relationsPlusAtoms.keys());
+    sortedRelationsAtoms = sortedRelationsAtoms.sort();
+    sortedRelationsAtoms = sortedRelationsAtoms.reverse();
+    for (let relatoms of sortedRelationsAtoms) {
+      if (returnArray.length > 5) return returnArray;
+      returnArray.push(relatoms);
+    }
+
+    return returnArray;
   }
 
   private async scrapeUSPTO(searchTerms: string[], cpc?: string): Promise<Map<string, string>> {
@@ -110,54 +197,3 @@ export class WordService {
       });
   }
 }
-
-/*
-private async getWordTypes(word: string) : string[] {
-    let returnArray : string[] = [];
-    let resultSet = new Set<string>();
-
-    let results = this.http.get(this.wordAPIRootUrl+word.replace('.', ''), {headers: this.headers} )
-    .toPromise().then(data => {
-      for (let i = 0; i < data['results'].length; i++) {
-        resultSet.add(data['results'][i]['partOfSpeech']);
-      }
-      for (let r of resultSet.values()) {
-        if (r == null) continue;
-        returnArray.push(r);
-      }
-    })
-    .catch(error => {
-      //By default, categorize anything with no definition as a noun
-      returnArray.push('noun');
-    });
-
-    return returnArray;
-  }
-
-  createKnowledgeBase(domain: string) {
-    //Strip out the articles and common terms
-    let strippedString = domain.toLowerCase();
-    let strippedDomain: Array<string> = strippedString.split(' ');
-    //Go get the parts of speech of each word (while minimizing the number of calls to WordsAPI)
-    let domainSet: Set<string> = new Set<string>();
-    for (let i = 0; i < strippedDomain.length; i++) {
-      domainSet.add(strippedDomain[i]);
-    }
-    let identifiedPartsOfSpeech: Map<string, string[]> = new Map();
-    domainSet.forEach(word => {
-      identifiedPartsOfSpeech.set(word, this.getWordTypes(word));
-    });
-    //Construct the knowledge base
-    this.knowledgeBase = new KnowledgeBase(domain, identifiedPartsOfSpeech);
-  }
-
-  getTopPrioritySearchTerms(): string[] {
-    //Once all relations and atoms are catalogued, rank them by how commonly they occur, and use that to form a list of priorities for the search.
-      //  1) Multiples of relations and atoms
-      //  2) Multiples of relations
-      //  3) Multiples of atoms
-      //  4) relations/atoms that have the longest length
-      //  5) relations/atoms that include the words "invention" or "present invention" are lowest priority
-      return [];
-  }
-*/
