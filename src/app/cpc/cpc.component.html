@@ -1,1 +1,57 @@
-<p>cpc works!</p>
+<div class="container pt-2">
+    <h2>Find Your CPC</h2>
+    <p>
+        On this page, you can identify the CPC of your invention using the menu below.
+    </p>
+    <h3>What is a CPC?</h3>
+    <p>
+        CPC stands for <em>Cooperative Patent Classification</em>. The CPC scheme is a system of classifying
+        patents jointly developed by the European Patent Office (EPO) and United States Patent and Trademark Office
+        (USPTO) to make it easier to categorize patents into their various technological genres. If you patent
+        your invention, the patent examiner will assign it its own CPC.
+    </p>
+    <p>
+        CPC codes are a lot like taxonomic classifications, in that the beginning part of the code represents
+        its most broad categorization (such as "Textiles" or "Electricity"), and gets more and more specific
+        as you read to the right.
+    </p>
+    <h3>How to Use</h3>
+    <p>
+        You can use the tool below to find the CPC of your invention. You can either make your way through the
+        CPC scheme yourself, drilling down into more and more detail, or you can type a few words related to your
+        invention in a search box and see what codes might fit yours.
+    </p>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="cpcSearchOption" (change)="onItemChange('searchTree')" id="searchTreeRadio" value="searchTree">
+        <label class="form-check-label" for="searchTreeRadio">Search CPC Schema</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="cpcSearchOption" (change)="onItemChange('searchKeyword')" id="searchKeywordRadio" value="searchKeyword">
+        <label class="form-check-label" for="searchKeywordRadio">Search by Keyword</label>
+    </div>
+    <br/>
+    <!-- What to display if the tree search is selected -->
+    <button *ngIf="displayTreeSearch" class="btn btn-warning mt-2">Return to Top of Schema</button>
+    <div *ngIf="displayTreeSearch" class="card mt-3">
+        <div class="card-header"><b>A</b> - Human Necessities</div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>A01</b> - something</li>
+            <li class="list-group-item"><b>A02</b> - something</li>
+            <li class="list-group-item"><b>A03</b> - something</li>
+        </ul>
+    </div>
+    <!-- What to display if the keyword search is selected -->
+    <div *ngIf="displayKeywordSearch" class="input-group mt-2">
+        <input type="text" class="form-control" placeholder="Enter some key words here">
+        <div class="input-group-append">
+            <button class="btn btn-warning" type="button">Search</button>
+        </div>
+    </div>
+    <div *ngIf="displayKeywordSearch" class="card mt-3">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><b>A01</b> - something</li>
+            <li class="list-group-item"><b>A02</b> - something</li>
+            <li class="list-group-item"><b>A03</b> - something</li>
+        </ul>
+    </div>
+</div>
