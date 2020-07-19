@@ -89,9 +89,12 @@ export class KnowledgeBase {
         }
         //At this point, you have a RELATION, a left ATOM, and a right ATOM. Use these to catalog the relation.
         this.relations.push(tempRelation);
-        if (typeof tempRelation.leftAtom !== 'undefined')
+        if (typeof tempRelation.leftAtom !== 'undefined') {
             this.atoms.push(tempRelation.leftAtom);
+        }
         this.atoms.push(tempRelation.rightAtom);
+        //Now, get a more fine-tuned experience by splitting the atoms where you encounter 'and' and 'or', and constructing new relations based off those
+        //Expand the fine-tuning further by splitting each atom into words
     }
    }
 }
