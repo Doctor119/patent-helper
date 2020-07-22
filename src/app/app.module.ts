@@ -12,6 +12,7 @@ import { PrelimSearchComponent } from './prelim-search/prelim-search.component';
 
 import { ConfigService } from './utility/config.service';
 import { loadAPIKey } from './utility/api-key-loader';
+import { CpcSearch } from './utility/cpc-search';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { loadAPIKey } from './utility/api-key-loader';
       useFactory: loadAPIKey,
       multi: true,
       deps: [HttpClient, ConfigService]
-    }
+    },
+    CpcSearch
   ],
   bootstrap: [AppComponent]
 })

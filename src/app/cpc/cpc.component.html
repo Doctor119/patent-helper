@@ -31,13 +31,11 @@
     </div>
     <br/>
     <!-- What to display if the tree search is selected -->
-    <button *ngIf="displayTreeSearch" class="btn btn-warning mt-2">Return to Top of Schema</button>
+    <button *ngIf="displayTreeSearch" class="btn btn-warning mt-2" (click)="returnToTop()">Return to Top of Schema</button>
     <div *ngIf="displayTreeSearch" class="card mt-3">
-        <div class="card-header"><b>A</b> - Human Necessities</div>
+        <div class="card-header" (click)="goUpALevel(upwardTreeSelection)"><b>{{upwardTreeSelection[0]}}</b> - {{upwardTreeSelection[1]}}</div>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item"><b>A01</b> - something</li>
-            <li class="list-group-item"><b>A02</b> - something</li>
-            <li class="list-group-item"><b>A03</b> - something</li>
+            <a class="list-group-item list-group-item-action" *ngFor="let cpc of currentTree" (click)="goDownALevel(cpc)"><b>{{cpc[0]}}</b> - {{cpc[1]}}</a>
         </ul>
     </div>
     <!-- What to display if the keyword search is selected -->

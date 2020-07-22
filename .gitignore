@@ -41,7 +41,7 @@ yarn-error.log
 testem.log
 /typings
 /src/assets/rapidapikey.json
-/src/assets/CPCSchemeXML202005/
+/src/assets/CPCTitleList202005/
 
 # System Files
 .DS_Store

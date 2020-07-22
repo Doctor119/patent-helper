@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CpcSearch } from '../utility/cpc-search';
 
 @Component({
   selector: 'app-cpc',
@@ -10,10 +11,19 @@ export class CpcComponent implements OnInit {
   displayTreeSearch: boolean = false;
   displayKeywordSearch: boolean = false;
 
-  constructor() { }
+  upwardTreeSelection: [string, string];
+  currentTree: [string, string][];
+  currentLevel: number;
 
-  ngOnInit(): void {
+  constructor(private cpcSearch: CpcSearch) {
+    this.upwardTreeSelection = ['-', '---'];
+    cpcSearch.getBaseTree().then(data => {
+      this.currentTree = data;
+    });
+    this.currentLevel = 1;
   }
+
+  ngOnInit(): void { }
 
   onItemChange(newValue: string): void {
     if (newValue === 'searchTree') {
@@ -26,11 +36,27 @@ export class CpcComponent implements OnInit {
     }
   }
 
-  goDownALevel(newLevel: string) {
-
+  goDownALevel(selectedCode: [string, string]) {
+    if(this.currentLevel == 5) return;
+    this.currentLevel++;
+    this.cpcSearch.cpcSelection(selectedCode[0]).then(data => {this.currentTree = data;} );
+    this.upwardTreeSelection = selectedCode;
   }
 
-  goUpALevel(newLevel: string) {
-    
+  goUpALevel(selectedCode: [string, string]) {
+    if(this.currentLevel == 1) return;
+    this.currentLevel--;
+    this.cpcSearch.getUpperCode(selectedCode[0]).then(upperCode => {
+      this.cpcSearch.cpcSelection(upperCode[0]).then(data => {this.currentTree = data;} );
+      this.upwardTreeSelection = upperCode;
+    });
+  }
+
+  returnToTop() {
+    this.upwardTreeSelection = ['-', '---'];
+    this.cpcSearch.getBaseTree().then(data => {
+      this.currentTree = data;
+    });
+    this.currentLevel = 1;
   }
 }
