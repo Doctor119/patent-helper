@@ -15,6 +15,9 @@ export class CpcComponent implements OnInit {
   currentTree: [string, string][];
   currentLevel: number;
 
+  searchInput: string;
+  searchResults: [string, string][];
+
   constructor(private cpcSearch: CpcSearch) {
     this.upwardTreeSelection = ['-', '---'];
     cpcSearch.getBaseTree().then(data => {
@@ -58,5 +61,10 @@ export class CpcComponent implements OnInit {
       this.currentTree = data;
     });
     this.currentLevel = 1;
+  }
+
+  searchByKeyword() {
+    if (typeof this.searchInput === 'undefined') return;
+    this.cpcSearch.searchCpcsByKeyword(this.searchInput, 10).then(data => this.searchResults = data);
   }
 }

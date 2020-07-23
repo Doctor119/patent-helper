@@ -1,6 +1,4 @@
 import { Injectable } from '@angular/core';
-import * as xml2js from 'xml2js';
-import * as xpath from 'xml2js-xpath';
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { resolveForwardRef } from '@angular/core';
 import { getUrlScheme } from '@angular/compiler';
@@ -12,14 +10,18 @@ import { of } from 'rxjs';
 export class CpcSearch {
     //A         single letter
     level1 = /^[ABCDEFGHY]$/;
+
     //A01       single letter, 2 numbers
     level2 = /^[ABCDEFGHY][0-9]{2}$/;
+
     //A01B      single letter, 2 numbers, single letter
     level3 = /^[ABCDEFGHY][0-9]{2}[A-Z]$/;
-    //A01B1/00  single letter, 2 numbers, single letter, one number, slash, two zeros
-    level4 = /^[ABCDEFGHY]\d{2}[A-Z]\d\/0{2}$/;
-    //A01B1/02  single letter, 2 numbers, single letter, one number, slash, any number of digits
-    level5 = /^[ABCDEFGHY]\d{2}[A-Z]\d\/\d[1-9]+$/;
+
+    //A01B1/00  single letter, 2 numbers, single letter, 1-2 numbers, slash, two zeros
+    level4 = /^[ABCDEFGHY]\d{2}[A-Z]\d{1,2}\/0{2}$/;
+
+    //A01B1/02  single letter, 2 numbers, single letter, 1-2 numbers, slash, any number of digits
+    level5 = /^[ABCDEFGHY]\d{2}[A-Z]\d{1,2}\/\d[1-9]+$/;
 
     headers: HttpHeaders = new HttpHeaders()
         .set('Content-Type', 'text-xml')
@@ -145,7 +147,8 @@ export class CpcSearch {
                 upperCode = code.substr(0, 4);
                 break;
             case this.level5:
-                upperCode = code.substr(0, 6) + '00';
+                let indexOfSlash = code.indexOf('\/');
+                upperCode = code.substr(0, indexOfSlash+1) + '00';
                 break;
             default:
                 throw "could not identify code level";
@@ -158,5 +161,25 @@ export class CpcSearch {
             if (splitLine[0] === upperCode)
                 return [splitLine[0], splitLine[1]];
         }
+    }
+
+    async searchCpcsByKeyword(keyword: string, maxNumOfResults: number): Promise<[string, string][]> {
+        let cpcLetters: string[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'Y'];
+        let keywords: string[] = keyword.split(' ');
+        let returnArray: [string, string][] = [];
+        for (let letter of cpcLetters) {
+            let fullText: string = await this.getCpcTxtFile(letter);
+            for (let line of fullText.split('\n')) {
+                for (let k of keywords) {
+                    if (line.includes(k)) {
+                        returnArray.push([line.split('\t')[0], line.split('\t')[1]]);
+                        if (returnArray.length >= maxNumOfResults) {
+                            return returnArray;
+                        }
+                    }
+                }
+            }
+        }
+        return returnArray;
     }
 }

@@ -40,16 +40,14 @@
     </div>
     <!-- What to display if the keyword search is selected -->
     <div *ngIf="displayKeywordSearch" class="input-group mt-2">
-        <input type="text" class="form-control" placeholder="Enter some key words here">
+        <input type="text" class="form-control" placeholder="Enter some key words here" (input)="searchInput = $event.target.value">
         <div class="input-group-append">
-            <button class="btn btn-warning" type="button">Search</button>
+            <button class="btn btn-warning" type="button" (click)="searchByKeyword()">Search</button>
         </div>
     </div>
     <div *ngIf="displayKeywordSearch" class="card mt-3">
         <ul class="list-group list-group-flush">
-            <li class="list-group-item"><b>A01</b> - something</li>
-            <li class="list-group-item"><b>A02</b> - something</li>
-            <li class="list-group-item"><b>A03</b> - something</li>
+            <li class="list-group-item" *ngFor="let result of searchResults"><b>{{result[0]}}</b> - {{result[1]}}</li>
         </ul>
     </div>
 </div>
