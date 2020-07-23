@@ -17,11 +17,11 @@ export class CpcSearch {
     //A01B      single letter, 2 numbers, single letter
     level3 = /^[ABCDEFGHY][0-9]{2}[A-Z]$/;
 
-    //A01B1/00  single letter, 2 numbers, single letter, 1-2 numbers, slash, two zeros
-    level4 = /^[ABCDEFGHY]\d{2}[A-Z]\d{1,2}\/0{2}$/;
+    //A01B1/00  single letter, 2 numbers, single letter, 1-4 numbers, slash, two zeros
+    level4 = /^[ABCDEFGHY]\d{2}[A-Z]\d{1,4}\/0{2}$/;
 
-    //A01B1/02  single letter, 2 numbers, single letter, 1-2 numbers, slash, any number of digits
-    level5 = /^[ABCDEFGHY]\d{2}[A-Z]\d{1,2}\/\d[1-9]+$/;
+    //A01B1/02  single letter, 2 numbers, single letter, 1-4 numbers, slash, any number of digits
+    level5 = /^[ABCDEFGHY]\d{2}[A-Z]\d{1,4}\/\d[1-9]+$/;
 
     headers: HttpHeaders = new HttpHeaders()
         .set('Content-Type', 'text-xml')
