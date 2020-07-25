@@ -1,3 +1,5 @@
+import { ThrowStmt } from '@angular/compiler';
+
 export class KnowledgeBase {
    domain: string;
    atoms: Array<FirstOrderAtom>;
@@ -79,7 +81,7 @@ export class KnowledgeBase {
         for (let i = prep+1; i < splitDomain_periods.length; i++) {
             let currentWord = splitDomain_periods[i];
             //When a period or is/are is found, everything from the preposition to this point is the SECOND ATOM (not including the preposition)
-            if (currentWord === 'is' || currentWord === 'are' || currentWord.endsWith('.')) {
+            if (currentWord === 'is' || currentWord === 'are' || currentWord === 'have' || currentWord === 'has' || currentWord.endsWith('.')) {
                 for (let j = prep+1; j <= i; j++)
                     tempRightAtom.fullAtom += ' ' + splitDomain_periods[j];
                 tempRightAtom.fullAtom = tempRightAtom.fullAtom.trim().replace('.', '');
@@ -94,8 +96,121 @@ export class KnowledgeBase {
         }
         this.atoms.push(tempRelation.rightAtom);
         //Now, get a more fine-tuned experience by splitting the atoms where you encounter 'and' and 'or', and constructing new relations based off those
-        //Expand the fine-tuning further by splitting each atom into words
+        //Start with the left atom
+        if (typeof tempRelation.leftAtom !== 'undefined') {
+            if (/( and | or )/g.test(tempRelation.leftAtom.fullAtom)) {
+                //Split the string up into an array of words
+                let splitAtom: string[] = tempRelation.leftAtom.fullAtom.split(' ');
+                let lastFoundAndOrIndex = -1;
+                //Use the and/or words to construct new atoms, starting from the beginning of the array and iterating through until it hits an "and" or "or"
+                for (let i = 0; i < splitAtom.length; i++) {
+                    if (splitAtom[i] === 'and' || splitAtom[i] === 'or') {
+                        let newAtom: string = "";
+                        for (let j = lastFoundAndOrIndex + 1; j < i; j++) {
+                            newAtom += ' ' + splitAtom[j];
+                        }
+                        newAtom = newAtom.trim().replace('.', '');
+                        let tempAtom: FirstOrderAtom = new FirstOrderAtom(newAtom);
+                        let newRelation: FirstOrderRelation = new FirstOrderRelation();
+                        newRelation.leftAtom = tempAtom;
+                        newRelation.rightAtom = tempRelation.rightAtom;
+                        newRelation.relation = tempRelation.relation;
+                        this.relations.push(newRelation);
+                        this.atoms.push(tempAtom);
+                        lastFoundAndOrIndex = i;
+                    }
+                }
+                //After iterating through the whole array, all that will be left is the last atom
+                let newAtom: string = "";
+                for (let j = lastFoundAndOrIndex + 1; j < splitAtom.length; j++) {
+                    newAtom += ' ' + splitAtom[j];
+                }
+                newAtom = newAtom.trim().replace('.', '');
+                let tempAtom: FirstOrderAtom = new FirstOrderAtom(newAtom);
+                let newRelation: FirstOrderRelation = new FirstOrderRelation();
+                newRelation.leftAtom = tempAtom;
+                newRelation.rightAtom = tempRelation.rightAtom;
+                newRelation.relation = tempRelation.relation;
+                this.relations.push(newRelation);
+                this.atoms.push(tempAtom);
+            }
+            //Expand the fine-tuning by adding atoms to the list that are simple adjective-noun expressions
+            let splitAtom: string[] = tempRelation.leftAtom.fullAtom.split(' ');
+            let lastFoundNounIndex = -1;
+            for (let i = 0; i < splitAtom.length; i++) {
+                if (reducedPartsOfSpeechMap.get(splitAtom[i]) === 'noun') {
+                    let newAtom: string = "";
+                    for (let j = lastFoundNounIndex + 1; j < i; j++) {
+                        newAtom += ' ' + splitAtom[j];
+                    }
+                    newAtom = newAtom.trim().replace('.', '');
+                    this.atoms.push(new FirstOrderAtom(newAtom));
+                    lastFoundNounIndex = i;
+                }
+            }
+            //Finally, split the atoms into individual words and add them to the list of atoms
+            for (let i = 0; i < splitAtom.length; i++) {
+                this.atoms.push(new FirstOrderAtom(splitAtom[i].replace('.', '')));
+            }
+        }
+        //Now do the same process with the right atom
+        if (/( and | or )/g.test(tempRelation.rightAtom.fullAtom)) {
+            //Split the string up into an array of words
+            let splitAtom: string[] = tempRelation.rightAtom.fullAtom.split(' ');
+            let lastFoundAndOrIndex = -1;
+            //Use the and/or words to construct new atoms, starting from the beginning of the array and iterating through until it hits an "and" or "or"
+            for (let i = 0; i < splitAtom.length; i++) {
+                if (splitAtom[i] === 'and' || splitAtom[i] === 'or') {
+                    let newAtom: string = "";
+                    for (let j = lastFoundAndOrIndex + 1; j < i; j++) {
+                        newAtom += ' ' + splitAtom[j];
+                    }
+                    newAtom = newAtom.trim().replace('.', '');
+                    let tempAtom: FirstOrderAtom = new FirstOrderAtom(newAtom);
+                    let newRelation: FirstOrderRelation = new FirstOrderRelation();
+                    newRelation.leftAtom = tempRelation.leftAtom;
+                    newRelation.rightAtom = tempAtom;
+                    newRelation.relation = tempRelation.relation;
+                    this.relations.push(newRelation);
+                    this.atoms.push(tempAtom);
+                    lastFoundAndOrIndex = i;
+                }
+            }
+            //After iterating through the whole array, all that will be left is the last atom
+            let newAtom: string = "";
+            for (let j = lastFoundAndOrIndex + 1; j < splitAtom.length; j++) {
+                newAtom += ' ' + splitAtom[j];
+            }
+            newAtom = newAtom.trim().replace('.', '');
+            let tempAtom: FirstOrderAtom = new FirstOrderAtom(newAtom);
+            let newRelation: FirstOrderRelation = new FirstOrderRelation();
+            newRelation.leftAtom = tempRelation.leftAtom;
+            newRelation.rightAtom = tempAtom;
+            newRelation.relation = tempRelation.relation;
+            this.relations.push(newRelation);
+            this.atoms.push(tempAtom);
+        }
+        //Expand the fine-tuning by adding atoms to the list that are simple adjective-noun expressions
+        let splitAtom: string[] = tempRelation.rightAtom.fullAtom.split(' ');
+        let lastFoundNounIndex = -1;
+        for (let i = 0; i < splitAtom.length; i++) {
+            if (reducedPartsOfSpeechMap.get(splitAtom[i]) === 'noun') {
+                let newAtom: string = "";
+                for (let j = lastFoundNounIndex + 1; j < i; j++) {
+                    newAtom += ' ' + splitAtom[j];
+                }
+                newAtom = newAtom.trim().replace('.', '');
+                this.atoms.push(new FirstOrderAtom(newAtom));
+                lastFoundNounIndex = i;
+            }
+        }
+        //Finally, split the atoms into individual words and add them to the list of atoms
+        for (let i = 0; i < splitAtom.length; i++) {
+            this.atoms.push(new FirstOrderAtom(splitAtom[i].replace('.', '')));
+        }
     }
+    //Once construction is complete, take out any atoms which are empty strings
+    this.atoms = this.atoms.filter(atm => atm.fullAtom !== '');
    }
 }
 

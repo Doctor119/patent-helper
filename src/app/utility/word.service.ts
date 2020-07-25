@@ -86,40 +86,7 @@ export class WordService {
       else {
         relations.set(rel.relation, 1);
       }
-      //Update atoms
-      if (typeof rel.leftAtom !== 'undefined') {
-        if (atoms.has(rel.leftAtom.fullAtom)) {
-          atoms.set(rel.leftAtom.fullAtom, atoms.get(rel.leftAtom.fullAtom) + 1);
-        }
-        else {
-          atoms.set(rel.leftAtom.fullAtom, 1);
-        }
-      }
-      if (atoms.has(rel.rightAtom.fullAtom)) {
-        atoms.set(rel.rightAtom.fullAtom, atoms.get(rel.rightAtom.fullAtom) + 1);
-      }
-      else {
-        atoms.set(rel.rightAtom.fullAtom, 1);
-      }
-      //Update individual words
-      if (typeof rel.leftAtom !== 'undefined') {
-        for (let word of rel.leftAtom.getIndividualWords()) {
-          if (individualWords.has(word)) {
-            individualWords.set(word, individualWords.get(word) + 1);
-          }
-          else {
-            individualWords.set(word, 1);
-          }
-        }
-      }
-      for (let word of rel.rightAtom.getIndividualWords()) {
-        if (individualWords.has(word)) {
-          individualWords.set(word, individualWords.get(word) + 1);
-        }
-        else {
-          individualWords.set(word, 1);
-        }
-      }
+      //Update individual words in relations
       for (let word of rel.getRelationIndividualWords()) {
         if (individualWords.has(word)) {
           individualWords.set(word, individualWords.get(word) + 1);
@@ -129,56 +96,80 @@ export class WordService {
         }
       }
     }
+    //Now update atoms and individual words
+    for (let atm of kb.atoms) {
+      //Update atoms
+      if (atoms.has(atm.fullAtom)) {
+        atoms.set(atm.fullAtom, atoms.get(atm.fullAtom) + 1);
+      }
+      else {
+        atoms.set(atm.fullAtom, 1);
+      }
+      //Update individual words in atoms
+      for (let word of atm.getIndividualWords()) {
+        if (individualWords.has(word)) {
+          individualWords.set(word, individualWords.get(word) + 1);
+        }
+        else {
+          individualWords.set(word, 1);
+        }
+      }
+    }
+
 
     console.log('FIRST ORDER DECOMPOSITIONS ARE LISTED BELOW');
     console.log(relationsPlusAtoms);
     console.log(relations);
     console.log(atoms);
     
-    let returnArray: string[] = [];
+    let returnSet: Set<string> = new Set();
+    let commonWords: string[] = ['has', 'have', 'of', 'new', 'named', 'called', 'is', 'that', 'a', 'an', 'plant'];
     //Use the following priorities
     //  1) Multiples of relations and atoms
     for (let rel of relationsPlusAtoms.keys()) {
-      if (returnArray.length > 5) return returnArray;
-      if (relationsPlusAtoms.get(rel) > 1)
-        returnArray.push(rel);
+      if (relationsPlusAtoms.get(rel) > 1 && !commonWords.includes(rel))
+        returnSet.add(rel);
     }
     //  2) Multiples of relations
     for (let rel of relations.keys()) {
-      if (returnArray.length > 5) return returnArray;
-      if (relations.get(rel) > 1)
-        returnArray.push(rel);
+      if (relations.get(rel) > 1 && !commonWords.includes(rel))
+        returnSet.add(rel);
     }
     //  3) Multiples of atoms
     for (let atom of atoms.keys()) {
-      if (returnArray.length > 5) return returnArray;
-      if (atoms.get(atom) > 1)
-        returnArray.push(atom);
+      if (atoms.get(atom) > 1 && !commonWords.includes(atom))
+        returnSet.add(atom);
     }
     //  4) relations/atoms that have the longest length
     let sortedRelationsAtoms: Array<string> = Array.from(relationsPlusAtoms.keys());
-    sortedRelationsAtoms = sortedRelationsAtoms.sort();
-    sortedRelationsAtoms = sortedRelationsAtoms.reverse();
     for (let relatoms of sortedRelationsAtoms) {
-      if (returnArray.length > 5) return returnArray;
-      returnArray.push(relatoms);
+      if (!commonWords.includes(relatoms))
+        returnSet.add(relatoms);
     }
     //  5) Relations that have the longest length
     let sortedRelations: Array<string> = Array.from(relations.keys());
-    sortedRelations = sortedRelations.sort();
-    sortedRelations = sortedRelations.reverse();
     for (let rel of sortedRelations) {
-      if (returnArray.length > 5) return returnArray;
-      returnArray.push(rel);
+      if (!commonWords.includes(rel))
+        returnSet.add(rel);
     }
     //  6) Atoms that have the longest length
     let sortedAtoms: Array<string> = Array.from(atoms.keys());
-    sortedAtoms = sortedAtoms.sort();
-    sortedAtoms = sortedAtoms.reverse();
     for (let atom of sortedAtoms) {
-      if (returnArray.length > 5) return returnArray;
-      returnArray.push(atom);
+      if (!commonWords.includes(atom))
+        returnSet.add(atom);
     }
+
+    //Sort array by length
+    let returnArray: string[] = Array.from(returnSet);
+    returnArray = returnArray.sort((a, b) => {
+      if (a.length < b.length) return -1;
+      else if (b.length < a.length) return 1;
+      else return 0;
+    });
+    returnArray = returnArray.reverse();
+
+    console.log('PRIORITY CALCULATED');
+    console.log(returnArray);
 
     return returnArray;
   }
@@ -223,6 +214,8 @@ export class WordService {
       .toPromise().then(data => {
         if (word === 'a' || word === 'an' || word === 'the')
           returnArray.push('definite article');
+        else if (word === 'have')
+          returnArray.push('verb');
         else {
           for (let i = 0; i < data['results'].length; i++) {
             resultSet.add(data['results'][i]['partOfSpeech']);
