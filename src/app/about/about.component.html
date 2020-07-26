@@ -1,1 +1,58 @@
-<p>about works!</p>
+<div class="container">
+    <h2>About</h2>
+    <p>
+        The Preliminary Patent Finder was created solely by Marcus Hahne, a Computer Science student 
+        at WGU. The product is his capstone project.
+    </p>
+    <h3>Core Concepts</h3>
+    <p>
+        Several aspects of computer science theory have been used to create this project.
+        To make it easier to understand how this theory was used, core concepts are explained below.
+    </p>
+    <h4>First-Order Logic</h4>
+    <p>
+        First-Order logic is a collection of formal systems used in mathematics and philosophy, but 
+        also in computer science as a subject of artificial intelligence. 
+    </p>
+    <p>
+        Ordinarily, first-order logic is used in the building of chatbots. Typically, bots have 
+        a set of known knowledge which they can reference, and the user that chats with the 
+        chatbot is able to say multiple different phrases to access the same piece of knowledge.
+        For example, the chatbot could know the price of an automobile tire that its store sells,
+        but to be prompted for that knowledge, the user might ask one of many different questions,
+        such as "How much are your tires?", "How much do tires cost?", or "What is the cost of tires?"
+        First-order logic is a set of rules by which all of these questions access the same fact
+        in the chatbot's knowledge base.
+    </p>
+    <p>
+        A key component of a chatbot that uses first-order logic is its knowledge base. Ordinarily,
+        a knowledge base is constructed by consulting a client who has familiarity with the chatbot's
+        business. In this app, instead a knowledge base is constructed dynamically from a description
+        the user enters.
+    </p>
+    <h4>Reverse Indexing</h4>
+    <p>Searching through the entire patent database is a difficult task because of its large quantity
+        of data. Often, when a solution calls for such a search, a system called "reverse indexing" is 
+        used. In reverse indexing, performance is improved by cataloging keywords of the knowledge first,
+        organizing those keywords into an efficient tree, then performing the search.
+    </p>
+    <p>
+        A notable part of this application is that it can search for relevant keywords without using
+        reverse indexing.
+    </p>
+    <h3>The Theory Behind this Application</h3>
+    <p>
+        This application <b>performs keyword searches of non-indexed lists using intelligent first-order decomposition</b>.
+        After the user enters a description of an invention, the app breaks the description into pieces, labeling those
+        pieces "relations" or "atoms" (first-order logic concepts) as appropriate. It does so by consulting a dictionary
+        and identifying prepositional phrases and verbs, words that connote a relationship between two things, or an action
+        of one thing on another. Then, the atoms on the left and right side of the relation are identified. Further processing
+        breaks those atoms into individual words. In this way, a knowledge base is built without the need of a human subject matter expert.
+    </p>
+    <p>
+        After the knowledge base is constructed, it is used to identify search terms. The algorithm gives priority to 
+        relation-atom combinations that have been repeated multiple times. Then, it gives priority to repeated relations
+        (without considering the atoms attached to them), then priority is given to repeated atoms (without relations),
+        then finally to individual words.
+    </p>
+</div>
