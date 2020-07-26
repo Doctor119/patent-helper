@@ -23,7 +23,7 @@ export class WordService {
    * to form a priority list of terms to search in the USPTO database. Returns a map containing patent numbers and a portion of their
    * abstracts.
    */
-  public async getSearchResults(description: string) : Promise<Map<string, string>>{
+  public async getSearchResults(description: string, cpc: string) : Promise<Map<string, string>>{
     //First, use a dictionary API to retrieve the types of speech of each word (noun, verb, preposition, etc.)
     let wordsOfSpeechMap: Map<string, string[]> = await this.getPartsOfSpeechMap(description);
 
@@ -37,7 +37,7 @@ export class WordService {
     //Go scrape the USPTO databases using the search terms
     let foundPatents: Map<string, string> = new Map();
     for (let term of priorityTerms) {
-      let scrapeResults: Map<string, string> = await this.scrapeUSPTO(term);
+      let scrapeResults: Map<string, string> = await this.scrapeUSPTO(term, cpc);
       for (let kvpair of scrapeResults.entries()) {
         if (foundPatents.size > 9) break;
         foundPatents.set(kvpair[0], kvpair[1]);
@@ -116,14 +116,13 @@ export class WordService {
       }
     }
 
-
     console.log('FIRST ORDER DECOMPOSITIONS ARE LISTED BELOW');
     console.log(relationsPlusAtoms);
     console.log(relations);
     console.log(atoms);
     
     let returnSet: Set<string> = new Set();
-    let commonWords: string[] = ['has', 'have', 'of', 'new', 'named', 'called', 'is', 'that', 'a', 'an', 'plant'];
+    let commonWords: string[] = ['has', 'have', 'of', 'new', 'named', 'called', 'is', 'that', 'a', 'an', 'plant', 'the', 'so', 'or', 'be', 'from', 'may'];
     //Use the following priorities
     //  1) Multiples of relations and atoms
     for (let rel of relationsPlusAtoms.keys()) {
@@ -182,7 +181,8 @@ export class WordService {
     let fields: string = '&f=["patent_number","patent_abstract"]';
     //Construct query parameters based on the search terms
     if (cpc) {
-      //TODO
+      console.log('cpc detected: ' + cpc);
+      queryParameters = 'q={"_and":[{"_text_all":{"patent_abstract":"' + searchTerm + '"}},{"cpc_subgroup_id":"' + cpc + '"}]}';
     }
     else {
       queryParameters = 'q={"_text_all":{"patent_abstract":"' + searchTerm + '"}}';
